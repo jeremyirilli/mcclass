@@ -89,7 +89,7 @@ hint(problem, [], _Col, Hint) =>
 % binomial distribution.
 expert(powbinom, stage(2), From, To, [step(expert, upper1, [])]) :-
     From = crit(Alpha, N, P0),
-    To   = crit(Alpha, N, P0, tail("upper", k), arg("min", k > N*P0)).
+    To   = crit(Alpha, N, P0, upper(k), arg("min", k > N*P0)).
 
 feedback(upper1, [], _Col, Feed)
  => Feed = [ "Correctly determined the critical value from the upper tail of ",
@@ -119,7 +119,7 @@ hint(dist1, [], _Col, Hint)
 % Fourth step: Determine the power based on upper tail
 expert(powbinom, stage(2), From, To, [step(expert, upper2, [])]) :-
     From = power(Crit, N, P1),
-    To   = power(Crit, N, P1, tail("upper", Crit)).
+    To   = power(Crit, N, P1, upper(Crit)).
 
 feedback(upper2, [], _Col, Feed)
  => Feed = [ "Correctly selected the upper tail of cumulative distribution ",
@@ -153,7 +153,7 @@ hint(dist2, [], _Col, Hint)
 % binomial distribution.
 buggy(powbinom, stage(2), From, To, [step(buggy, lower1, [])]) :-
     From = crit(Alpha, N, P0),
-    To   = crit(Alpha, N, P0, instead(lower1, tail("lower", k), tail("upper", k)),
+    To   = crit(Alpha, N, P0, instead(lower1, lower(k), upper(k)),
                 instead(lower1, arg("max", k < N*P0), arg("min", k > N*P0))).
 
 feedback(lower1, [], _Col, Feed)
@@ -169,15 +169,16 @@ hint(lower1, [], _Col, Hint)
 
 % Buggy- Rule: Critical value based on density = not cumulated
 buggy(powbinom, stage(2), From, To, [step(buggy, dens1, [K])]) :-
-    From = tail(Tail, K),
-    member(Tail, ["upper", "lower"]),
-    To = instead(dens1, tail("equal", K), tail("upper", K)).
+    From = Tail,
+    Tail =.. [Tail0, K],
+    member(Tail0, [upper, lower]),
+    To = instead(dens1, densi(K), upper(K)).
 
 feedback(dens1, [K], Col, Feed)
  => Feed = [ "The result matches the critical value based on the binomial ",
-             "probability, ", \mmlm(Col, [fn(subscript('P', "Bi"), [color(dens1, tail("equal", K))]), "."]),
+             "probability, ", \mmlm(Col, [fn(subscript('P', "Bi"), [color(dens1, densi(K))]), "."]),
              "Please calculate the critical value based on the cumulative ",
-             "distribution, ", \mmlm(Col, [fn(subscript('P', "Bi"), [tail("upper", K)]), "."])
+             "distribution, ", \mmlm(Col, [fn(subscript('P', "Bi"), [upper(K)]), "."])
            ].
 
 hint(dens1, [_K], _Col, Hint)
@@ -188,7 +189,7 @@ hint(dens1, [_K], _Col, Hint)
 % Buggy-Rule: Power based on lower tail (wrong tail for power)
 buggy(powbinom, stage(2), From, To, [step(buggy, lower2, [])]) :-
     From = power(Crit, N, P1),
-    To   = power(Crit, N, P1, instead(lower2, tail("lower", k), tail("upper", k))).
+    To   = power(Crit, N, P1, instead(lower2, lower(k), upper(k))).
 
 feedback(lower2, [], _Col, Feed)
  => Feed = ["The result matches the Power based on the lower critical ",
@@ -203,15 +204,16 @@ hint(lower2, [], _Col, Hint)
 
 % Buggy- Rule: Critical value based on density
 buggy(powbinom, stage(2), From, To, [step(buggy, dens2, [C])]) :-
-    From = tail(Tail, C),
-    member(Tail, ["upper", "lower"]),
-    To = instead(dens2, tail("equal", C), tail("upper", C)).
+    From = Tail,
+    Tail =.. [Tail0, C],
+    member(Tail0, [upper, lower]),
+    To = instead(dens2, densi(C), upper(C)).
 
 feedback(dens2, [C], Col, Feed)
  => Feed = [ "The result matches the Power based on the binomial probability, ",
-             \mmlm(Col, [fn(subscript('P', "Bi"), [color(dens2, tail("equal", C))]), "."]),
+             \mmlm(Col, [fn(subscript('P', "Bi"), [color(dens2, densi(C))]), "."]),
              "Please report the power based on the cumulative ",
-             "distribution, ", \mmlm(Col, [fn(subscript('P', "Bi"), [tail("upper", C)]), "."])
+             "distribution, ", \mmlm(Col, [fn(subscript('P', "Bi"), [upper(C)]), "."])
            ].
 
 hint(dens2, [_C], _Col, Hint)
